@@ -15,5 +15,3 @@ def read_root():
 @app.post('/usuarios/', status_code=HTTPStatus.CREATED, response_model=UsuarioRead)
 def criar_usuario(usuario: UsuarioBase):
     return usuario
-
-@app.post
