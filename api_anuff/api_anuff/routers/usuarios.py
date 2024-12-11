@@ -59,3 +59,4 @@ def deletar_usuario(usuario_id: int):
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
     database = [u for u in database if u['id'] != usuario_id]
     return
+
