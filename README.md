@@ -2,15 +2,21 @@
 
 Para executar é necessário possuir docker instalado na máquina
 
-Pode ser necessário executar com acesso `root`:
+Pode ser necessário executar com acesso `root`
 
-    $ sudo ./build.sh
+O arquivo deve ser chamado com source:
+
+    $ source ./run.sh
+
+ou:
+
+    $ source ./run.sh
 
 Ao executar pedirá para definir a senha do usuário admin.
 
 Essa senha também pode ser definida na chamada do comando. Ex.:
 
-    $ sudo ./build.sh Minha_Senha123#
+    $ . ./run.sh Minha_Senha123#
 
 A instancia gerada terá um banco `anuff`, com usuário de acesso `admin`, podendo ser acessada com o comando:
 

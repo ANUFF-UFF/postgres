@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from http import HTTPStatus
 from typing import List
 
-from api_anuff.schemas import AnuncioBase, AnuncioRead
+from api_anuff.schemas import AnuncioBase, AnuncioResponse
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ def get_anuncio_by_id(anuncio_id: int):
     return None
 
 
-@router.post("/", status_code=HTTPStatus.CREATED, response_model=AnuncioRead)
+@router.post("/", status_code=HTTPStatus.CREATED, response_model=AnuncioResponse)
 def criar_anuncio(anuncio: AnuncioBase):
     global current_anuncio_id
     novo_anuncio = anuncio.dict()
@@ -28,12 +28,12 @@ def criar_anuncio(anuncio: AnuncioBase):
     return novo_anuncio
 
 
-@router.get("/", status_code=HTTPStatus.OK, response_model=List[AnuncioRead])
+@router.get("/", status_code=HTTPStatus.OK, response_model=List[AnuncioResponse])
 def listar_anuncios():
     return anuncios_database
 
 
-@router.get("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioRead)
+@router.get("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioResponse)
 def obter_anuncio(anuncio_id: int):
     anuncio = get_anuncio_by_id(anuncio_id)
     if not anuncio:
@@ -41,7 +41,7 @@ def obter_anuncio(anuncio_id: int):
     return anuncio
 
 
-@router.put("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioRead)
+@router.put("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioResponse)
 def atualizar_anuncio(anuncio_id: int, anuncio: AnuncioBase):
     existente = get_anuncio_by_id(anuncio_id)
     if not existente:
