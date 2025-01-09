@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from http import HTTPStatus
 from typing import List
 from rapidfuzz import fuzz
+from typing import List, Optional
 
 
 from api_anuff.schemas import AnuncioBase, AnuncioResponse
@@ -33,6 +34,7 @@ def criar_anuncio(anuncio: AnuncioBase):
 @router.get("/", status_code=HTTPStatus.OK, response_model=List[AnuncioResponse])
 def listar_anuncios():
     return anuncios_database
+   
 
 
 @router.get("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioResponse)
@@ -62,21 +64,52 @@ def deletar_anuncio(anuncio_id: int):
     return
 
 @router.get("/buscar", status_code=HTTPStatus.OK, response_model=List[AnuncioResponse])
-def buscar_anuncios_por_titulo(nome: str = Query(..., description="Título ou parte do título do anúncio"), similaridade_minima: int = 80):
+def buscar_e_filtrar_anuncios(
+    nome: Optional[str] = Query(None, description="Título ou parte do título do anúncio"),
+    similaridade_minima: int = Query(80, description="Pontuação mínima de similaridade (0 a 100)"),
+    preco_min: Optional[float] = Query(None, description="Filtrar por preço mínimo"),
+    preco_max: Optional[float] = Query(None, description="Filtrar por preço máximo"),
+    ordenar_por: Optional[List[str]] = Query(
+        None,
+        description="Ordenar por uma combinação de critérios: 'mais_caros', 'mais_baratos', 'mais_novos', 'mais_antigos'"
+    ),
+):
     """
-    Busca anúncios pelo título com base na semelhança de palavras.
-    - similaridade_minima (int): A pontuação mínima de similaridade (de 0 a 100) para incluir um anúncio nos resultados.
-    
-    EXEMPLO:
-    GET /anuncios/buscar?nome=produto&similaridade_minima=80
+    Combina busca por título com filtros e ordenação:
+    - `nome`: Busca anúncios pelo título com base na similaridade de palavras.
+    - `similaridade_minima`: Pontuação mínima de similaridade para incluir anúncios.
+    - `preco_min` e `preco_max`: Filtros de preço.
+    - `ordenar_por`: Ordena os resultados com base nos critérios fornecidos.
     """
-    resultados = []
-    for anuncio in anuncios_database:
-        pontuacao = fuzz.partial_ratio(nome.lower(), anuncio["titulo"].lower())
-        if pontuacao >= similaridade_minima:
-            resultados.append(anuncio)
+    anuncios_filtrados = anuncios_database
 
-    if not resultados:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Nenhum anúncio encontrado com base no critério fornecido")
-    
-    return resultados
+    # Filtrar por título (similaridade)
+    if nome:
+        anuncios_filtrados = [
+            anuncio for anuncio in anuncios_filtrados
+            if fuzz.partial_ratio(nome.lower(), anuncio["titulo"].lower()) >= similaridade_minima
+        ]
+
+    # Filtrar por preço
+    if preco_min is not None:
+        anuncios_filtrados = [a for a in anuncios_filtrados if a["preco"] >= preco_min]
+    if preco_max is not None:
+        anuncios_filtrados = [a for a in anuncios_filtrados if a["preco"] <= preco_max]
+
+    # Ordenar por critérios
+    if ordenar_por:
+        for criterio in reversed(ordenar_por):
+            if criterio == "mais_caros":
+                anuncios_filtrados.sort(key=lambda x: x["preco"], reverse=True)
+            elif criterio == "mais_baratos":
+                anuncios_filtrados.sort(key=lambda x: x["preco"])
+            elif criterio == "mais_novos":
+                anuncios_filtrados.sort(key=lambda x: x["criado_em"], reverse=True)
+            elif criterio == "mais_antigos":
+                anuncios_filtrados.sort(key=lambda x: x["criado_em"])
+
+    # Retornar erro se nenhum resultado encontrado
+    if not anuncios_filtrados:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Nenhum anúncio encontrado com base nos critérios fornecidos")
+
+    return anuncios_filtrados
