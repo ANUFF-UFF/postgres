@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from typing import Optional
 
 class Message(BaseModel):
     message: str
@@ -35,6 +36,52 @@ class AnuncioResponse(AnuncioBase):
     class Config:
         orm_mode = True
 
+class ChatBase(BaseModel):
+    usuario_1_id: int
+    usuario_2_id: int
+
+
+class ChatRead(ChatBase):
+    id: int
+    criado_em: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class MensagemBase(BaseModel):
+    chat_id: int
+    remetente_id: int
+    conteudo: str
+
+
+class MensagemRead(MensagemBase):
+    id: int
+    enviada_em: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class AvaliacaoBase(BaseModel):
+    nota: int
+    comentario: Optional[str]
+    autor: int
+    anuncio: int
+
+
+class AvaliacaoRead(BaseModel):
+    id: int
+    nota: int
+    comentario: Optional[str]
+    criada_em: datetime
+    autor: int
+    anuncio: int
+
+    class Config:
+        orm_mode = True
+ 
+
 class LoginData(BaseModel):
     email: str
     senha: str
@@ -42,3 +89,4 @@ class LoginData(BaseModel):
 class LoginResponse(BaseModel):
     mensagem: str
     usuario: str
+
