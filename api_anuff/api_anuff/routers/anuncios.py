@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from http import HTTPStatus
 from typing import List
+from rapidfuzz import fuzz
+
 
 from api_anuff.schemas import AnuncioBase, AnuncioResponse
 
@@ -58,3 +60,23 @@ def deletar_anuncio(anuncio_id: int):
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Anúncio não encontrado")
     anuncios_database = [a for a in anuncios_database if a['id'] != anuncio_id]
     return
+
+@router.get("/buscar", status_code=HTTPStatus.OK, response_model=List[AnuncioResponse])
+def buscar_anuncios_por_titulo(nome: str = Query(..., description="Título ou parte do título do anúncio"), similaridade_minima: int = 80):
+    """
+    Busca anúncios pelo título com base na semelhança de palavras.
+    - similaridade_minima (int): A pontuação mínima de similaridade (de 0 a 100) para incluir um anúncio nos resultados.
+    
+    EXEMPLO:
+    GET /anuncios/buscar?nome=produto&similaridade_minima=80
+    """
+    resultados = []
+    for anuncio in anuncios_database:
+        pontuacao = fuzz.partial_ratio(nome.lower(), anuncio["titulo"].lower())
+        if pontuacao >= similaridade_minima:
+            resultados.append(anuncio)
+
+    if not resultados:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Nenhum anúncio encontrado com base no critério fornecido")
+    
+    return resultados
