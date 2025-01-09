@@ -5,6 +5,8 @@ from routers.anuncios import router as anuncios_router
 from routers.chats import router as chats_router
 from routers.mensagens import router as mensagens_router
 from routers.avaliacoes import router as avaliacoes_router
+from routers.login import router as login_router
+
 
 app = FastAPI()
 
@@ -14,7 +16,7 @@ app.include_router(anuncios_router, prefix="/anuncios", tags=["Anúncios"])
 app.include_router(chats_router, prefix="/chats", tags=["Chats"])
 app.include_router(mensagens_router, prefix="/mensagens", tags=["Mensagens"])
 app.include_router(avaliacoes_router, prefix="/avaliacoes", tags=["Avaliações"])
-
+app.include_router(login_router, prefix="/login", tags=["Login"])
 
 
 @app.get("/", response_model=dict)

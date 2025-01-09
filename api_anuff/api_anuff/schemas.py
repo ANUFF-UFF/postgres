@@ -80,3 +80,13 @@ class AvaliacaoRead(BaseModel):
 
     class Config:
         orm_mode = True
+ 
+
+class LoginData(BaseModel):
+    email: str
+    senha: str
+
+class LoginResponse(BaseModel):
+    mensagem: str
+    usuario: str
+
