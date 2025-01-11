@@ -4,7 +4,7 @@ from typing import List
 from rapidfuzz import fuzz
 from typing import List, Optional
 
-
+from database import SessionDep
 from api_anuff.schemas import AnuncioBase, AnuncioResponse
 
 router = APIRouter()
@@ -22,13 +22,17 @@ def get_anuncio_by_id(anuncio_id: int):
 
 
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=AnuncioResponse)
-def criar_anuncio(anuncio: AnuncioBase):
-    global current_anuncio_id
-    novo_anuncio = anuncio.dict()
-    novo_anuncio["id"] = current_anuncio_id
-    current_anuncio_id += 1
-    anuncios_database.append(novo_anuncio)
-    return novo_anuncio
+def criar_anuncio(anuncio: AnuncioBase, session: SessionDep):
+    session.add(anuncio)
+    session.commit()
+    session.refresh(anuncio)
+    return anuncio
+    # global current_anuncio_id
+    # novo_anuncio = anuncio.dict()
+    # novo_anuncio["id"] = current_anuncio_id
+    # current_anuncio_id += 1
+    # anuncios_database.append(novo_anuncio)
+    # return novo_anuncio
 
 
 @router.get("/", status_code=HTTPStatus.OK, response_model=List[AnuncioResponse])

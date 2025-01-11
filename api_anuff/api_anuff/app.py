@@ -6,9 +6,15 @@ from routers.chats import router as chats_router
 from routers.mensagens import router as mensagens_router
 from routers.avaliacoes import router as avaliacoes_router
 from routers.login import router as login_router
+from database import create_db_and_tables
 
 
 app = FastAPI()
+
+@app.on_event("startup")
+def on_startup():
+    #criar as tabelas relacionadas aos modelos
+    create_db_and_tables()
 
 # Registrar as rotas de usuários
 app.include_router(usuarios_router, prefix="/usuarios", tags=["Usuários"])

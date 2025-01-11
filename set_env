@@ -1,0 +1,4 @@
+export USERNAME=admin
+export PASSWORD=123456#
+export HOSTNAME=localhost
+export DATABASE=anuff

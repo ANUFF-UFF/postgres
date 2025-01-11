@@ -1,92 +1,106 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
+from sqlmodel import SQLModel, Field
 
-class Message(BaseModel):
+class Message(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     message: str
 
-class UsuarioBase(BaseModel):
+class UsuarioBase(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     nome: str
     email: EmailStr
     reputacao: float = 0.0
     senha: str
 
 class UsuarioRead(UsuarioBase):
-    id: int
+    id: int = Field(default=None, primary_key=True)
     nome: str
     email: EmailStr
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
-class AnuncioBase(BaseModel):
+class AnuncioBase(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     titulo: str
     descricao: str
     preco: float
     autor: int
 
 class AnuncioCreate(AnuncioBase):
+    id: int = Field(default=None, primary_key=True)
     autor: int
 
 class AnuncioResponse(AnuncioBase):
-    id: int
+    id: int = Field(default=None, primary_key=True)
     criado_em: datetime
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
-class ChatBase(BaseModel):
+class ChatBase(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     usuario_1_id: int
     usuario_2_id: int
 
 
 class ChatRead(ChatBase):
-    id: int
+    id: int = Field(default=None, primary_key=True)
     criado_em: datetime
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
-class MensagemBase(BaseModel):
+class MensagemBase(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     chat_id: int
     remetente_id: int
     conteudo: str
 
 
 class MensagemRead(MensagemBase):
-    id: int
+    id: int = Field(default=None, primary_key=True)
     enviada_em: datetime
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
-class AvaliacaoBase(BaseModel):
+class AvaliacaoBase(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     nota: int
     comentario: Optional[str]
     autor: int
     anuncio: int
 
 
-class AvaliacaoRead(BaseModel):
-    id: int
+class AvaliacaoRead(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     nota: int
     comentario: Optional[str]
     criada_em: datetime
     autor: int
     anuncio: int
 
-    class Config:
-        orm_mode = True
- 
+    # class Config:
+    #     orm_mode = True
 
-class LoginData(BaseModel):
+class AvaliacaoCreate(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    #todo
+    pass
+
+class LoginData(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     email: str
     senha: str
 
-class LoginResponse(BaseModel):
+class LoginResponse(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
     mensagem: str
     usuario: str
 
