@@ -12,7 +12,7 @@ ou:
 
     $ . ./run.sh
 
-Ao executar pedirá para definir as variaveis de ambiente necessárias para definir usuario, senha, etc, caso não exista no arquivo `./set_env`.
+Ao executar pedirá para definir as variaveis de ambiente necessárias para definir usuario, senha, etc, caso não exista o arquivo `./set_env`.
 
 Se esse arquivo já exisitir essa etapa será pulada.
 
