@@ -3,9 +3,7 @@ container_name=anuff-postgres
 venv_name=.venv
 
 # arquivo de variaveis de ambiente com a seguinte cara:
-if [ -f ./set_env ]; then
-    . set_env
-else
+if [ ! -f ./set_env ]; then
     echo criando arquivo set_env
     read -p "USERNAME: " user
     read -p "PASSWORD: " password
@@ -16,6 +14,7 @@ else
     echo export HOSTNAME="$name" >> set_env
     echo export DATABASE="$database" >> set_env
 fi
+. set_env
 
 echo "Using password '$PASSWORD' to create $container_name"
 
