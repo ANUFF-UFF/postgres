@@ -10,21 +10,17 @@ O arquivo deve ser chamado com source:
 
 ou:
 
-    $ source ./run.sh
+    $ . ./run.sh
 
-Ao executar pedirá para definir a senha do usuário admin.
+Ao executar pedirá para definir as variaveis de ambiente necessárias para definir usuario, senha, etc, caso não exista no arquivo `./set_env`.
 
-Essa senha também pode ser definida na chamada do comando. Ex.:
+Se esse arquivo já exisitir essa etapa será pulada.
 
-    $ . ./run.sh Minha_Senha123#
+A instancia gerada pode ser acessada com o comando:
 
-A instancia gerada terá um banco `anuff`, com usuário de acesso `admin`, podendo ser acessada com o comando:
+    $ psql -h <endereço_da_instancia> -U <usuario> <nome_do_banco_de_dados>
 
-    $ psql -h <endereço_da_instancia> -U admin anuff
-
-Que pedirá a senha definida anteriormente
-
-    Password for user admin:
+Que também pedirá a senha salva no arquivo `./set_env`
 
 # Tipos de Commits e Branches
 
