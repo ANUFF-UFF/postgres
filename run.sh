@@ -7,11 +7,10 @@ if [ ! -f ./set_env ]; then
     echo criando arquivo set_env
     read -p "USERNAME: " user
     read -p "PASSWORD: " password
-    read -p "HOSTNAME: " name
     read -p "DATABASE: " database
     echo export USERNAME="$user" >> set_env
     echo export PASSWORD="$password" >> set_env
-    echo export HOSTNAME="$name" >> set_env
+    echo export HOSTNAME=localhost >> set_env
     echo export DATABASE="$database" >> set_env
 fi
 . set_env
