@@ -12,6 +12,9 @@ router = APIRouter()
 
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=AnuncioBase)
 def criar_anuncio(anuncio: AnuncioBase, session: SessionDep):
+    """
+    Cria um novo anúncio no banco de dados.
+    """
     def inner():
         anuncio.criado_em = datetime.now() 
         session.add(anuncio)
@@ -26,6 +29,9 @@ def criar_anuncio(anuncio: AnuncioBase, session: SessionDep):
     response_model=List[AnuncioBase]
 )
 def listar_anuncios(session: SessionDep):
+    """
+    Lista todos os anúncios disponíveis no banco de dados.
+    """
     def inner():
         return session.exec(select(AnuncioBase)).all()
     return try_block(session, inner)
@@ -91,6 +97,9 @@ def buscar_e_filtrar_anuncios(
 
 @router.get("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioBase)
 def obter_anuncio(anuncio_id: int, session: SessionDep):
+    """
+    Obtém um único anúncio pelo ID.
+    """
     def inner():
         anuncio = session.exec(select(AnuncioBase).where(AnuncioBase.id == anuncio_id)).first()
         if anuncio is None:
@@ -102,6 +111,9 @@ def obter_anuncio(anuncio_id: int, session: SessionDep):
 
 @router.put("/{anuncio_id}", status_code=HTTPStatus.OK, response_model=AnuncioBase)
 def atualizar_anuncio(anuncio_id: int, anuncio: AnuncioBase, session: SessionDep):
+    """
+    Atualiza os dados de um anúncio pelo ID.
+    """
     def inner():
         existente = session.exec(select(AnuncioBase).where(AnuncioBase.id == anuncio_id)).first()
         if existente is None:
@@ -114,6 +126,9 @@ def atualizar_anuncio(anuncio_id: int, anuncio: AnuncioBase, session: SessionDep
 
 @router.delete("/{anuncio_id}", status_code=HTTPStatus.ACCEPTED, response_model=AnuncioBase)
 def deletar_anuncio(anuncio_id: int, session: SessionDep):
+    """
+    Deleta um anúncio pelo ID.
+    """
     def inner():
         anuncio = session.exec(select(AnuncioBase).where(AnuncioBase.id == anuncio_id)).first()
         if anuncio is None:

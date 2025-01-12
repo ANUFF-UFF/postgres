@@ -3,10 +3,6 @@ from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field, BaseModel
 
-class Message(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    message: str
-
 class UsuarioBase(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nome: str
@@ -53,6 +49,7 @@ class MensagemBase(SQLModel, table=True):
     chat_id: int
     remetente_id: int
     conteudo: str
+    enviada_em: datetime
 
 
 class MensagemRead(MensagemBase):
