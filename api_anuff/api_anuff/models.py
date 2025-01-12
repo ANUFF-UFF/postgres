@@ -10,6 +10,7 @@ class Usuario(Base):
     nome = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     senha = Column(String(255), nullable=False)
+    ocupacao = Column(String(100), nullable=False)
     reputacao = Column(Float, default=0.0)
 
     # Relacionamentos
@@ -28,7 +29,7 @@ class Anuncio(Base):
     titulo = Column(String, nullable=False)
     descricao = Column(String, nullable=True)
     preco = Column(Numeric(9, 2), nullable=True)
-    nota = Column(Integer, nullable=True)
+    nota = Column(Float, default=0.0)
     criado_em = Column(DateTime, default=func.now())
 
     # Relacionamentos

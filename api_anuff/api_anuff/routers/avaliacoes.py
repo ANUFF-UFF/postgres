@@ -4,7 +4,7 @@ from typing import List
 from sqlmodel import select, and_
 from datetime import datetime
 
-from api_anuff.schemas import AvaliacaoBase, AnuncioBase
+from api_anuff.schemas import AvaliacaoBase, AnuncioBase, UsuarioBase
 from database import SessionDep, try_block, Session
 
 router = APIRouter()
@@ -12,6 +12,32 @@ router = APIRouter()
 # Funções auxiliares
 def get_avaliacao_by_id(session: Session, avaliacao_id: int):
     return session.exec(select(AvaliacaoBase).where(AvaliacaoBase.id == avaliacao_id)).first()
+
+def calcular_reputacao_usuario(usuario_id: int, session):
+    """
+    Calcula a reputação de um usuário com base nas avaliações dos anúncios que ele criou.
+    """
+    anuncios = session.exec(select(AnuncioBase).where(AnuncioBase.autor_id == usuario_id)).all()
+    if not anuncios:
+        return 0.0  
+
+    avaliacoes = []
+    for anuncio in anuncios:
+        avaliacoes.extend(session.exec(select(AvaliacaoBase).where(AvaliacaoBase.anuncio_id == anuncio.id)).all())
+
+    if not avaliacoes:
+        return 0.0
+
+    soma_notas = sum(avaliacao.nota for avaliacao in avaliacoes)
+    media = soma_notas / len(avaliacoes)
+
+    usuario = session.exec(select(UsuarioBase).where(UsuarioBase.id == usuario_id)).first()
+    if usuario:
+        usuario.reputacao = media
+        session.add(usuario)
+        session.commit()
+
+    return media
 
 def calcular_media_anuncio(anuncio_id: int, session):
     """
@@ -52,6 +78,7 @@ def criar_avaliacao(session: SessionDep, avaliacao: AvaliacaoBase):
         session.commit()
         session.refresh(avaliacao)
         calcular_media_anuncio(avaliacao.anuncio_id, session)
+        calcular_reputacao_usuario(avaliacao.anuncio.autor_id, session)
         return avaliacao
 
     return try_block(session, inner)
@@ -114,5 +141,6 @@ def deletar_avaliacao(session: SessionDep, avaliacao_id: int):
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Avaliação não encontrada")
         session.delete(avaliacao)
         calcular_media_anuncio(avaliacao.anuncio_id, session)
+        calcular_reputacao_usuario(avaliacao.anuncio.autor_id, session)
         return avaliacao
     return try_block(session, inner)

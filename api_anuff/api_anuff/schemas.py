@@ -8,6 +8,7 @@ class UsuarioBase(SQLModel, table=True):
     nome: str
     email: EmailStr
     reputacao: float = 0.0
+    ocupacao: str
     senha: str
 
 # class UsuarioRead(UsuarioBase):
@@ -25,7 +26,7 @@ class AnuncioBase(SQLModel, table=True):
     descricao: str
     preco: float
     autor: int
-    nota: int
+    nota: float = 0.0
     criado_em: Optional[datetime]
 
 # class AnuncioCreate(AnuncioBase):
