@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import List
 from sqlmodel import select, and_, or_
 
-from api_anuff.schemas import ChatBase, ChatRead
+from api_anuff.schemas import ChatBase
 from database import SessionDep, try_block, Session
 
 router = APIRouter()
@@ -16,7 +16,7 @@ def get_chat_by_id(session, chat_id: int):
     return try_block(session, inner)
 
 
-@router.post("/", status_code=HTTPStatus.CREATED, response_model=ChatRead)
+@router.post("/", status_code=HTTPStatus.CREATED, response_model=ChatBase)
 def criar_chat(session: SessionDep, chat: ChatBase):
     def inner():
         session.add(chat)
@@ -26,14 +26,14 @@ def criar_chat(session: SessionDep, chat: ChatBase):
     return try_block(session, inner)
 
 
-@router.get("/", status_code=HTTPStatus.OK, response_model=List[ChatRead])
+@router.get("/", status_code=HTTPStatus.OK, response_model=List[ChatBase])
 def listar_chats(session: SessionDep):
     def inner():
         return session.exec(select(ChatBase)).all()
     return try_block(session, inner)
 
 
-@router.get("/usuarios", status_code=HTTPStatus.OK, response_model=ChatRead)
+@router.get("/usuarios", status_code=HTTPStatus.OK, response_model=ChatBase)
 def obter_chat_por_usuarios(session: SessionDep, usuario_1_id: int, usuario_2_id: int):
     """
     Obtém um chat com base nos IDs dos dois usuários.
@@ -57,7 +57,7 @@ def obter_chat_por_usuarios(session: SessionDep, usuario_1_id: int, usuario_2_id
     return try_block(session, inner)
 
 
-@router.get("/{chat_id}", status_code=HTTPStatus.OK, response_model=ChatRead)
+@router.get("/{chat_id}", status_code=HTTPStatus.OK, response_model=ChatBase)
 def obter_chat(session: SessionDep, chat_id: int):
     def inner():
         chat = get_chat_by_id(session, chat_id)

@@ -1,26 +1,26 @@
 from pydantic import EmailStr
 from datetime import datetime
 from typing import Optional
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, BaseModel
 
 class Message(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     message: str
 
 class UsuarioBase(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     nome: str
     email: EmailStr
     reputacao: float = 0.0
     senha: str
 
-class UsuarioRead(UsuarioBase):
-    id: int = Field(default=None, primary_key=True)
-    nome: str
-    email: EmailStr
-
-    # class Config:
-    #     orm_mode = True
+# class UsuarioRead(UsuarioBase):
+#    id: int = Field(default=None, primary_key=True)
+#    nome: str
+#    email: EmailStr
+#
+#    # class Config:
+#    #     orm_mode = True
 
 
 class AnuncioBase(SQLModel, table=True):
@@ -90,13 +90,11 @@ class AvaliacaoBase(SQLModel, table=True):
 #     #todo
 #     pass
 
-class LoginData(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+class LoginData(BaseModel, table=True):
     email: str
     senha: str
 
 class LoginResponse(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
     mensagem: str
     usuario: str
 
