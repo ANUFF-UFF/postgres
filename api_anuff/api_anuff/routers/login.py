@@ -9,7 +9,7 @@ from database import SessionDep, try_block, Session
 router = APIRouter()
 
 @router.post("/", response_model=LoginResponse)
-def login(session: SessioDep, dados: LoginData, usuarios=Depends(listar_usuarios)):
+def login(session: SessionDep, dados: LoginData, usuarios=Depends(listar_usuarios)):
     """
     Verifica se o email e a senha correspondem a um usuário válido na lista de usuários.
     """
