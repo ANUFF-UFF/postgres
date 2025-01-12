@@ -21,7 +21,4 @@ def login(session: SessioDep, dados: LoginData, usuarios=Depends(listar_usuarios
     if usuario is None:
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     
-    return {
-        "mensagem": "Login bem-sucedido!",
-        "usuario": usuario["nome"]
-    }
+    return LoginResponse(usuario = usuario)

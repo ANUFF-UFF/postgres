@@ -97,6 +97,5 @@ class LoginData(BaseModel, table=True):
     senha: str
 
 class LoginResponse(SQLModel, table=True):
-    mensagem: str
-    usuario: str
+    usuario: UsuarioBase
 
