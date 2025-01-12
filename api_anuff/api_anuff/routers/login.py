@@ -13,12 +13,15 @@ def login(session: SessionDep, dados: LoginData, usuarios=Depends(listar_usuario
     """
     Verifica se o email e a senha correspondem a um usuário válido na lista de usuários.
     """
-    usuario = session.exec(select(UsuarioBase).where(and_(
-        UsuarioBase.email == dados.email,
-        UsuarioBase.senha == dados.senha
-    ))).first()
+    def inner():
+        usuario = session.exec(select(UsuarioBase).where(and_(
+            UsuarioBase.email == dados.email,
+            UsuarioBase.senha == dados.senha
+        ))).first()
 
-    if usuario is None:
-        raise HTTPException(status_code=401, detail="Credenciais inválidas")
-    
-    return LoginResponse(usuario = usuario)
+        if usuario is None:
+            raise HTTPException(status_code=401, detail="Credenciais inválidas")
+
+        return LoginResponse(usuario=usuario.nome, mensagem="Login realizado com sucesso")
+
+    return try_block(session, inner)
