@@ -24,22 +24,23 @@ class UsuarioRead(UsuarioBase):
 
 
 class AnuncioBase(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     titulo: str
     descricao: str
     preco: float
     autor: int
+    criado_em: Optional[datetime]
 
-class AnuncioCreate(AnuncioBase):
-    id: int = Field(default=None, primary_key=True)
-    autor: int
-
-class AnuncioResponse(AnuncioBase):
-    id: int = Field(default=None, primary_key=True)
-    criado_em: datetime
-
-    # class Config:
-    #     orm_mode = True
+# class AnuncioCreate(AnuncioBase):
+#     id: int = Field(default=None, primary_key=True)
+#     autor: int
+#
+# class AnuncioResponse(AnuncioBase):
+#     id: int = Field(default=None, primary_key=True)
+#     # criado_em: datetime
+#
+#     # class Config:
+#     #     orm_mode = True
 
 class ChatBase(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)

@@ -1,7 +1,9 @@
 # from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 # from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlmodel import SQLModel, create_engine, Session
-from typing import Annotated
+from typing import Annotated, Callable
+from fastapi import HTTPException
+from http import HTTPStatus
 from fastapi import Depends
 from sqlalchemy import URL
 from os import getenv
@@ -39,3 +41,18 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 SessionDep = Annotated[Session, Depends(get_session())]
+
+def try_block(session: Session, func: Callable, debug=True):
+    try:
+        return func()
+    except Exception as e:
+        session.rollback()
+        if debug:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+                detail=f"{e}"
+            )
+        else:
+            raise HTTPException(
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
