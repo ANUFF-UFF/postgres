@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr
 from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field
@@ -72,28 +72,31 @@ class MensagemRead(MensagemBase):
 
 
 class AvaliacaoBase(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(
+        default=None,
+        primary_key=True,
+    )
     nota: int
     comentario: Optional[str]
+    criada_em: Optional[datetime]
     autor: int
     anuncio: int
 
-
-class AvaliacaoRead(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    nota: int
-    comentario: Optional[str]
-    criada_em: datetime
-    autor: int
-    anuncio: int
-
-    # class Config:
-    #     orm_mode = True
-
-class AvaliacaoCreate(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    #todo
-    pass
+# class AvaliacaoRead(SQLModel, table=True):
+#     id: int = Field(default=None, primary_key=True)
+#     nota: int
+#     comentario: Optional[str]
+#     criada_em: datetime
+#     autor: int
+#     anuncio: int
+#
+#     # class Config:
+#     #     orm_mode = True
+#
+# class AvaliacaoCreate(SQLModel, table=True):
+#     id: int = Field(default=None, primary_key=True)
+#     #todo
+#     pass
 
 class LoginData(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
