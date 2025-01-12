@@ -43,17 +43,9 @@ class AnuncioBase(SQLModel, table=True):
 #     #     orm_mode = True
 
 class ChatBase(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     usuario_1_id: int
     usuario_2_id: int
-
-
-class ChatRead(ChatBase):
-    id: int = Field(default=None, primary_key=True)
-    criado_em: datetime
-
-    # class Config:
-    #     orm_mode = True
 
 
 class MensagemBase(SQLModel, table=True):
