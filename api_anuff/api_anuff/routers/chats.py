@@ -42,7 +42,7 @@ def obter_chat_por_usuarios(session: SessionDep, usuario_1_id: int, usuario_2_id
     GET /chats/usuarios?usuario_1_id=1&usuario_2_id=2
     """
     def inner():
-        return session(select(ChatBase).where(
+        chat = session(select(ChatBase).where(
             or_(
                 and_(
                     ChatBase.usuario_1_id == usuario_1_id,
@@ -53,7 +53,11 @@ def obter_chat_por_usuarios(session: SessionDep, usuario_1_id: int, usuario_2_id
                     ChatBase.usuario_1_id == usuario_2_id
                 )
             )
-        )).all()
+        )).first()
+        if chat is None:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Chat não encontrado")
+        return chat
+
     return try_block(session, inner)
 
 
