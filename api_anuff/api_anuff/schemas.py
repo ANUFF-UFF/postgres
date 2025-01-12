@@ -43,6 +43,9 @@ class ChatBase(SQLModel, table=True):
     usuario_1_id: int
     usuario_2_id: int
 
+class ChatRead(ChatBase):
+    id: int
+
 
 class MensagemBase(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
