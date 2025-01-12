@@ -28,6 +28,7 @@ class Anuncio(Base):
     titulo = Column(String, nullable=False)
     descricao = Column(String, nullable=True)
     preco = Column(Numeric(9, 2), nullable=True)
+    nota = Column(Integer, nullable=True)
     criado_em = Column(DateTime, default=func.now())
 
     # Relacionamentos

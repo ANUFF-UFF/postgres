@@ -4,7 +4,7 @@ from typing import List
 from sqlmodel import select, and_
 from datetime import datetime
 
-from api_anuff.schemas import AvaliacaoBase
+from api_anuff.schemas import AvaliacaoBase, AnuncioBase
 from database import SessionDep, try_block, Session
 
 router = APIRouter()
@@ -12,6 +12,25 @@ router = APIRouter()
 # Funções auxiliares
 def get_avaliacao_by_id(session: Session, avaliacao_id: int):
     return session.exec(select(AvaliacaoBase).where(AvaliacaoBase.id == avaliacao_id)).first()
+
+def calcular_media_anuncio(anuncio_id: int, session):
+    """
+    Calcula a média das notas de um anúncio com base nas avaliações associadas.
+    """
+    avaliacoes = session.exec(select(AvaliacaoBase).where(AvaliacaoBase.anuncio_id == anuncio_id)).all()
+    if not avaliacoes:
+        return 0.0  
+
+    soma_notas = sum(avaliacao.nota for avaliacao in avaliacoes)
+    media = soma_notas / len(avaliacoes)
+
+    anuncio = session.exec(select(AnuncioBase).where(AnuncioBase.id == anuncio_id)).first()
+    if anuncio:
+        anuncio.nota = media
+        session.add(anuncio)
+        session.commit()
+
+    return media
 
 
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=AvaliacaoBase)
@@ -32,6 +51,7 @@ def criar_avaliacao(session: SessionDep, avaliacao: AvaliacaoBase):
         session.add(avaliacao)
         session.commit()
         session.refresh(avaliacao)
+        calcular_media_anuncio(avaliacao.anuncio_id, session)
         return avaliacao
 
     return try_block(session, inner)
@@ -93,5 +113,6 @@ def deletar_avaliacao(session: SessionDep, avaliacao_id: int):
         if avaliacao is None:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Avaliação não encontrada")
         session.delete(avaliacao)
+        calcular_media_anuncio(avaliacao.anuncio_id, session)
         return avaliacao
     return try_block(session, inner)

@@ -25,6 +25,7 @@ class AnuncioBase(SQLModel, table=True):
     descricao: str
     preco: float
     autor: int
+    nota: int
     criado_em: Optional[datetime]
 
 # class AnuncioCreate(AnuncioBase):
