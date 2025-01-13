@@ -10,6 +10,7 @@ class UsuarioBase(SQLModel, table=True):
     reputacao: float = 0.0
     ocupacao: str
     senha: str
+    foto: str
 
 # class UsuarioRead(UsuarioBase):
 #    id: int = Field(default=None, primary_key=True)
@@ -28,6 +29,7 @@ class AnuncioBase(SQLModel, table=True):
     autor: int
     nota: float = 0.0
     criado_em: Optional[datetime]
+    foto: str
 
 # class AnuncioCreate(AnuncioBase):
 #     id: int = Field(default=None, primary_key=True)
