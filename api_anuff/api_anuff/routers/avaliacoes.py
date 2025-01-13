@@ -17,13 +17,13 @@ def calcular_reputacao_usuario(usuario_id: int, session):
     """
     Calcula a reputação de um usuário com base nas avaliações dos anúncios que ele criou.
     """
-    anuncios = session.exec(select(AnuncioBase).where(AnuncioBase.autor_id == usuario_id)).all()
+    anuncios = session.exec(select(AnuncioBase).where(AnuncioBase.autor == usuario_id)).all()
     if not anuncios:
         return 0.0  
 
     avaliacoes = []
     for anuncio in anuncios:
-        avaliacoes.extend(session.exec(select(AvaliacaoBase).where(AvaliacaoBase.anuncio_id == anuncio.id)).all())
+        avaliacoes.extend(session.exec(select(AvaliacaoBase).where(AvaliacaoBase.anuncio == anuncio.id)).all())
 
     if not avaliacoes:
         return 0.0
@@ -77,8 +77,8 @@ def criar_avaliacao(session: SessionDep, avaliacao: AvaliacaoBase):
         session.add(avaliacao)
         session.commit()
         session.refresh(avaliacao)
-        calcular_media_anuncio(avaliacao.anuncio_id, session)
-        calcular_reputacao_usuario(avaliacao.anuncio.autor_id, session)
+        # calcular_media_anuncio(avaliacao.anuncio, session)
+        # calcular_reputacao_usuario(avaliacao.anuncio.autor, session)
         return avaliacao
 
     return try_block(session, inner)
@@ -140,7 +140,8 @@ def deletar_avaliacao(session: SessionDep, avaliacao_id: int):
         if avaliacao is None:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Avaliação não encontrada")
         session.delete(avaliacao)
-        calcular_media_anuncio(avaliacao.anuncio_id, session)
-        calcular_reputacao_usuario(avaliacao.anuncio.autor_id, session)
+        session.commit()
+        # calcular_media_anuncio(avaliacao.anuncio, session)
+        # calcular_reputacao_usuario(avaliacao.anuncio.autor, session)
         return avaliacao
     return try_block(session, inner)

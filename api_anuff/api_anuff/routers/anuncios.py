@@ -6,7 +6,7 @@ from sqlalchemy import and_
 from datetime import datetime
 
 from database import SessionDep, try_block
-from api_anuff.schemas import AnuncioBase
+from api_anuff.schemas import AnuncioBase, UsuarioBase, anuncio_read, AnuncioRead
 
 router = APIRouter()
 
@@ -26,14 +26,24 @@ def criar_anuncio(anuncio: AnuncioBase, session: SessionDep):
 @router.get(
     "/",
     status_code=HTTPStatus.OK,
-    response_model=List[AnuncioBase]
+    response_model=List[AnuncioRead]
 )
 def listar_anuncios(session: SessionDep):
     """
     Lista todos os anúncios disponíveis no banco de dados.
     """
     def inner():
-        return session.exec(select(AnuncioBase)).all()
+        anuncios = session.exec(select(AnuncioBase)).all()
+        resposta = []
+        for a in anuncios:
+            usuario = session.exec(select(UsuarioBase).where(
+                UsuarioBase.id == a.autor
+            )).first()
+            resposta.append(
+                anuncio_read(a, usuario.nome)
+            )
+        return resposta
+            
     return try_block(session, inner)
 
    
