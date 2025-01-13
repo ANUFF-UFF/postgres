@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from http import HTTPStatus
 from typing import List
-from sqlmodel import select
+from sqlmodel import select, and_
+import hashlib
 
-from database import SessionDep, try_block
-from api_anuff.schemas import UsuarioBase, UsuarioRead  # Usuario não existe aqui
+from database import SessionDep, hash_password, try_block
+from api_anuff.schemas import LoginData, UsuarioBase, UsuarioRead, usuario_base_to_read # Usuario não existe aqui
 
 router = APIRouter()
 
@@ -15,11 +16,11 @@ def criar_usuario(usuario: UsuarioBase, session: SessionDep):
     Adiciona um novo usuário ao banco de dados.
     """
     def inner():
+        usuario.senha = hashlib.md5(usuario.senha.encode()).hexdigest()
         session.add(usuario)
         session.commit()
         session.refresh(usuario)
-        return usuario
-
+        return usuario_base_to_read(usuario)
     return try_block(session, inner)
 
 
@@ -29,7 +30,11 @@ def listar_usuarios(session: SessionDep):
     Retorna a lista de todos os usuários cadastrados no banco de dados.
     """
     def inner():
-        return session.exec(select(UsuarioBase)).all()
+        return [
+            usuario_base_to_read(u)
+            for u in
+            session.exec(select(UsuarioBase)).all()
+        ]
 
     return try_block(session, inner)
 
@@ -43,26 +48,33 @@ def obter_usuario(usuario_id: int, session: SessionDep):
         usuario = session.exec(select(UsuarioBase).where(UsuarioBase.id == usuario_id)).first()
         if not usuario:
             raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
-        return usuario
+        return usuario_base_to_read(usuario)
 
     return try_block(session, inner)
 
 
 @router.put("/{usuario_id}", status_code=HTTPStatus.OK, response_model=UsuarioRead)
-def atualizar_usuario(usuario_id: int, usuario: UsuarioBase, session: SessionDep):
+def atualizar_usuario(
+    usuario_id: int,
+    novo_usuario: UsuarioBase,
+    session: SessionDep
+):
     """
     Atualiza os dados de um usuário no banco de dados, removendo o registro antigo e adicionando um novo.
     """
     def inner():
-        existente = session.exec(select(UsuarioBase).where(UsuarioBase.id == usuario_id)).first()
-        if not existente:
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
-        session.delete(existente)
+        usuario = session.exec(
+            select(UsuarioBase).where(
+                UsuarioBase.id == usuario_id,
+            )
+        ).first()
+        if not usuario:
+            raise HTTPException(status_code=401, detail="credenciais inválidas")
+        session.delete(usuario)
+        session.add(novo_usuario)
         session.commit()
-        session.add(usuario)
-        session.commit()
-        session.refresh(usuario)
-        return usuario
+        session.refresh(novo_usuario)
+        return usuario_base_to_read(novo_usuario)
 
     return try_block(session, inner)
 

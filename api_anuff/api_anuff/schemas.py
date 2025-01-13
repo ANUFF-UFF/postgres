@@ -1,9 +1,12 @@
-from pydantic import EmailStr
+from pydantic import EmailStr, BaseModel
 from datetime import datetime
 from typing import Optional
-from sqlmodel import SQLModel, Field, BaseModel
+from sqlmodel import ForeignKey, SQLModel, Field, UniqueConstraint
 
 class UsuarioBase(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("email"),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     nome: str
     email: EmailStr
@@ -12,13 +15,20 @@ class UsuarioBase(SQLModel, table=True):
     senha: str
     foto: str
 
-# class UsuarioRead(UsuarioBase):
-#    id: int = Field(default=None, primary_key=True)
-#    nome: str
-#    email: EmailStr
-#
-#    # class Config:
-#    #     orm_mode = True
+class UsuarioRead(BaseModel):
+    id: int = Field(default=None, primary_key=True)
+    nome: str
+    email: EmailStr
+
+def usuario_base_to_read(u: UsuarioBase) -> UsuarioRead:
+    return UsuarioRead(
+        id=u.id,
+        nome=u.nome,
+        email=u.email
+    )
+
+   # class Config:
+   #     orm_mode = True
 
 
 class AnuncioBase(SQLModel, table=True):
@@ -26,7 +36,7 @@ class AnuncioBase(SQLModel, table=True):
     titulo: str
     descricao: str
     preco: float
-    autor: int
+    autor: int = Field(foreign_key="usuariobase.id")
     nota: float = 0.0
     criado_em: Optional[datetime]
     foto: str
@@ -44,17 +54,16 @@ class AnuncioBase(SQLModel, table=True):
 
 class ChatBase(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    usuario_1_id: int
-    usuario_2_id: int
+    usuario_1_id: int = Field(foreign_key="usuariobase.id")
+    usuario_2_id: int = Field(foreign_key="usuariobase.id")
 
-class ChatRead(ChatBase):
-    id: int
-
+# class ChatRead(ChatBase):
+#     id: int
 
 class MensagemBase(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    chat_id: int
-    remetente_id: int
+    chat_id: int = Field(foreign_key="chatbase.id")
+    remetente_id: int = Field(foreign_key="usuariobase.id")
     conteudo: str
     enviada_em: datetime
 
@@ -94,10 +103,10 @@ class AvaliacaoBase(SQLModel, table=True):
 #     #todo
 #     pass
 
-class LoginData(BaseModel, table=True):
-    email: str
+class LoginData(BaseModel):
+    email: EmailStr
     senha: str
 
-class LoginResponse(SQLModel, table=True):
-    usuario: UsuarioBase
+# class LoginResponse(SQLModel, table=True):
+#     usuario: UsuarioBase
 
