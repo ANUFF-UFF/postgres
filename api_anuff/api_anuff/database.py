@@ -1,5 +1,6 @@
 # from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 # from sqlalchemy.orm import sessionmaker, declarative_base
+import hashlib
 from sqlmodel import SQLModel, create_engine, Session
 from typing import Annotated, Callable
 from fastapi import HTTPException
@@ -56,3 +57,6 @@ def try_block(session: Session, func: Callable, debug=True):
             raise HTTPException(
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
+
+def hash_password(p: str) -> str:
+    return hashlib.md5(p.encode()).hexdigest()

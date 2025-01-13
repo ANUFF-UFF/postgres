@@ -21,7 +21,7 @@ def criar_anuncio(anuncio: AnuncioBase, session: SessionDep):
         session.commit()
         session.refresh(anuncio)
         return anuncio
-    try_block(session, inner)
+    return try_block(session, inner)
 
 @router.get(
     "/",
