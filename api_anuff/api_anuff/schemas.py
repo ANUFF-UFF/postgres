@@ -13,7 +13,7 @@ class UsuarioBase(SQLModel, table=True):
     reputacao: float = 0.0
     ocupacao: str
     senha: str
-    foto: str
+    foto: Optional[str]
 
 class UsuarioRead(BaseModel):
     id: int = Field(default=None, primary_key=True)
@@ -41,6 +41,29 @@ class AnuncioBase(SQLModel, table=True):
     criado_em: Optional[datetime]
     foto: str
 
+class AnuncioRead(BaseModel):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    titulo: str
+    descricao: str
+    preco: float
+    autor: int = Field(foreign_key="usuariobase.id")
+    nome_autor: str
+    nota: float = 0.0
+    criado_em: Optional[datetime]
+    foto: str
+
+def anuncio_read(a: AnuncioBase, nome_autor: str) -> AnuncioRead:
+    return AnuncioRead(
+        id=a.id,
+        titulo=a.titulo,
+        descricao=a.descricao,
+        preco=a.preco,
+        autor=a.autor,
+        nome_autor=nome_autor,
+        nota=a.nota,
+        criado_em=a.criado_em,
+        foto=a.foto
+    )
 # class AnuncioCreate(AnuncioBase):
 #     id: int = Field(default=None, primary_key=True)
 #     autor: int
