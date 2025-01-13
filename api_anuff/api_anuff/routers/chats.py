@@ -1,65 +1,97 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from http import HTTPStatus
 from typing import List
+from sqlmodel import select
 
-from api_anuff.schemas import ChatBase, ChatRead
+from database import SessionDep, try_block
+from api_anuff.schemas import ChatBase
 
 router = APIRouter()
 
-# Simulação do "banco de dados" em memória
-chats_database = []
-current_chat_id = 1
+
+@router.post("/", status_code=HTTPStatus.CREATED, response_model=ChatBase)
+def criar_chat(chat: ChatBase, session: SessionDep):
+    """
+    Cria um novo chat no banco de dados.
+    """
+    def inner():
+        session.add(chat)
+        session.commit()
+        session.refresh(chat)
+        return chat
+
+    return try_block(session, inner)
 
 
-def get_chat_by_id(chat_id: int):
-    for chat in chats_database:
-        if chat['id'] == chat_id:
-            return chat
-    return None
+@router.get("/", status_code=HTTPStatus.OK, response_model=List[ChatBase])
+def listar_chats(session: SessionDep):
+    """
+    Lista todos os chats disponíveis no banco de dados.
+    """
+    def inner():
+        return session.exec(select(ChatBase)).all()
+
+    return try_block(session, inner)
 
 
-@router.post("/", status_code=HTTPStatus.CREATED, response_model=ChatRead)
-def criar_chat(chat: ChatBase):
-    global current_chat_id
-    novo_chat = chat.dict()
-    novo_chat["id"] = current_chat_id
-    current_chat_id += 1
-    chats_database.append(novo_chat)
-    return novo_chat
+@router.get("/{chat_id}", status_code=HTTPStatus.OK, response_model=ChatBase)
+def obter_chat(chat_id: int, session: SessionDep):
+    """
+    Obtém um chat pelo ID.
+    """
+    def inner():
+        chat = session.exec(select(ChatBase).where(ChatBase.id == chat_id)).first()
+        if not chat:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Chat não encontrado")
+        return chat
 
-
-@router.get("/", status_code=HTTPStatus.OK, response_model=List[ChatRead])
-def listar_chats():
-    return chats_database
-
-
-@router.get("/{chat_id}", status_code=HTTPStatus.OK, response_model=ChatRead)
-def obter_chat(chat_id: int):
-    chat = get_chat_by_id(chat_id)
-    if not chat:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Chat não encontrado")
-    return chat
+    return try_block(session, inner)
 
 
 @router.delete("/{chat_id}", status_code=HTTPStatus.NO_CONTENT)
-def deletar_chat(chat_id: int):
-    global chats_database
-    chat = get_chat_by_id(chat_id)
-    if not chat:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Chat não encontrado")
-    chats_database = [c for c in chats_database if c['id'] != chat_id]
-    return
+def deletar_chat(chat_id: int, session: SessionDep):
+    """
+    Deleta um chat pelo ID.
+    """
+    def inner():
+        chat = session.exec(select(ChatBase).where(ChatBase.id == chat_id)).first()
+        if not chat:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Chat não encontrado")
+        session.delete(chat)
+        session.commit()
 
-@router.get("/usuarios", status_code=HTTPStatus.OK, response_model=ChatRead)
-def obter_chat_por_usuarios(usuario_1_id: int, usuario_2_id: int):
+    return try_block(session, inner)
+
+
+@router.get("/usuarios", status_code=HTTPStatus.OK, response_model=ChatBase)
+def obter_chat_por_usuarios(
+    session: SessionDep,
+    usuario_1_id: int = Query(..., description="ID do primeiro usuário"),
+    usuario_2_id: int = Query(..., description="ID do segundo usuário"),
+):
     """
     Obtém um chat com base nos IDs dos dois usuários.
     
     EXEMPLO:
     GET /chats/usuarios?usuario_1_id=1&usuario_2_id=2
     """
-    for chat in chats_database:
-        if (chat['usuario_1_id'] == usuario_1_id and chat['usuario_2_id'] == usuario_2_id) or \
-           (chat['usuario_1_id'] == usuario_2_id and chat['usuario_2_id'] == usuario_1_id):
-            return chat
-    raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Chat entre os usuários não encontrado")
+    def inner():
+        # Tenta encontrar o chat 
+        chat = session.exec(
+            select(ChatBase).where(
+                (ChatBase.usuario_1_id == usuario_1_id) & (ChatBase.usuario_2_id == usuario_2_id) |
+                (ChatBase.usuario_1_id == usuario_2_id) & (ChatBase.usuario_2_id == usuario_1_id)
+            )
+        ).first()
+        
+        # Se o chat não existir, cria um novo
+        if not chat:
+            novo_chat = ChatBase(usuario_1_id=usuario_1_id, usuario_2_id=usuario_2_id)
+            session.add(novo_chat)
+            session.commit()
+            session.refresh(novo_chat)
+            return novo_chat
+        
+        return chat
+
+    return try_block(session, inner)

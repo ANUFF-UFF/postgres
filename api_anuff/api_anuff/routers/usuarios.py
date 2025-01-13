@@ -1,62 +1,94 @@
 from fastapi import APIRouter, HTTPException
 from http import HTTPStatus
 from typing import List
+from sqlmodel import select, and_
+import hashlib
 
-from api_anuff.schemas import UsuarioBase, UsuarioRead
+from database import SessionDep, hash_password, try_block
+from api_anuff.schemas import LoginData, UsuarioBase, UsuarioRead, usuario_base_to_read # Usuario não existe aqui
 
 router = APIRouter()
 
-# Simulação do "banco de dados" em memória
-database = []
-current_id = 1
-
-
-# Funções auxiliares
-def get_usuario_by_id(usuario_id: int):
-    for usuario in database:
-        if usuario['id'] == usuario_id:
-            return usuario
-    return None
-
 
 @router.post("/", status_code=HTTPStatus.CREATED, response_model=UsuarioRead)
-def criar_usuario(usuario: UsuarioBase):
-    global current_id
-    novo_usuario = usuario.dict()
-    novo_usuario["id"] = current_id
-    current_id += 1
-    database.append(novo_usuario)
-    return novo_usuario
+def criar_usuario(usuario: UsuarioBase, session: SessionDep):
+    """
+    Adiciona um novo usuário ao banco de dados.
+    """
+    def inner():
+        usuario.senha = hashlib.md5(usuario.senha.encode()).hexdigest()
+        session.add(usuario)
+        session.commit()
+        session.refresh(usuario)
+        return usuario_base_to_read(usuario)
+    return try_block(session, inner)
 
 
 @router.get("/", status_code=HTTPStatus.OK, response_model=List[UsuarioRead])
-def listar_usuarios():
-    return database
+def listar_usuarios(session: SessionDep):
+    """
+    Retorna a lista de todos os usuários cadastrados no banco de dados.
+    """
+    def inner():
+        return [
+            usuario_base_to_read(u)
+            for u in
+            session.exec(select(UsuarioBase)).all()
+        ]
+
+    return try_block(session, inner)
 
 
 @router.get("/{usuario_id}", status_code=HTTPStatus.OK, response_model=UsuarioRead)
-def obter_usuario(usuario_id: int):
-    usuario = get_usuario_by_id(usuario_id)
-    if not usuario:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
-    return usuario
+def obter_usuario(usuario_id: int, session: SessionDep):
+    """
+    Recupera os detalhes de um usuário específico pelo ID.
+    """
+    def inner():
+        usuario = session.exec(select(UsuarioBase).where(UsuarioBase.id == usuario_id)).first()
+        if not usuario:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
+        return usuario_base_to_read(usuario)
+
+    return try_block(session, inner)
 
 
 @router.put("/{usuario_id}", status_code=HTTPStatus.OK, response_model=UsuarioRead)
-def atualizar_usuario(usuario_id: int, usuario: UsuarioBase):
-    existente = get_usuario_by_id(usuario_id)
-    if not existente:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
-    existente.update(usuario.dict())
-    return existente
+def atualizar_usuario(
+    usuario_id: int,
+    novo_usuario: UsuarioBase,
+    session: SessionDep
+):
+    """
+    Atualiza os dados de um usuário no banco de dados, removendo o registro antigo e adicionando um novo.
+    """
+    def inner():
+        usuario = session.exec(
+            select(UsuarioBase).where(
+                UsuarioBase.id == usuario_id,
+            )
+        ).first()
+        if not usuario:
+            raise HTTPException(status_code=401, detail="credenciais inválidas")
+        session.delete(usuario)
+        session.add(novo_usuario)
+        session.commit()
+        session.refresh(novo_usuario)
+        return usuario_base_to_read(novo_usuario)
+
+    return try_block(session, inner)
 
 
 @router.delete("/{usuario_id}", status_code=HTTPStatus.NO_CONTENT)
-def deletar_usuario(usuario_id: int):
-    global database
-    usuario = get_usuario_by_id(usuario_id)
-    if not usuario:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
-    database = [u for u in database if u['id'] != usuario_id]
-    return
+def deletar_usuario(usuario_id: int, session: SessionDep):
+    """
+    Remove um usuário do banco de dados pelo ID.
+    """
+    def inner():
+        usuario = session.exec(select(UsuarioBase).where(UsuarioBase.id == usuario_id)).first()
+        if not usuario:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="Usuário não encontrado")
+        session.delete(usuario)
+        session.commit()
 
+    return try_block(session, inner)

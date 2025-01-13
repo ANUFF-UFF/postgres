@@ -1,92 +1,112 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import EmailStr, BaseModel
 from datetime import datetime
 from typing import Optional
+from sqlmodel import ForeignKey, SQLModel, Field, UniqueConstraint
 
-class Message(BaseModel):
-    message: str
-
-class UsuarioBase(BaseModel):
+class UsuarioBase(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("email"),
+    )
+    id: Optional[int] = Field(default=None, primary_key=True)
     nome: str
     email: EmailStr
     reputacao: float = 0.0
+    ocupacao: str
     senha: str
+    foto: str
 
-class UsuarioRead(UsuarioBase):
-    id: int
+class UsuarioRead(BaseModel):
+    id: int = Field(default=None, primary_key=True)
     nome: str
     email: EmailStr
 
-    class Config:
-        orm_mode = True
+def usuario_base_to_read(u: UsuarioBase) -> UsuarioRead:
+    return UsuarioRead(
+        id=u.id,
+        nome=u.nome,
+        email=u.email
+    )
+
+   # class Config:
+   #     orm_mode = True
 
 
-class AnuncioBase(BaseModel):
+class AnuncioBase(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
     titulo: str
     descricao: str
     preco: float
-    autor: int
+    autor: int = Field(foreign_key="usuariobase.id")
+    nota: float = 0.0
+    criado_em: Optional[datetime]
+    foto: str
 
-class AnuncioCreate(AnuncioBase):
-    autor: int
+# class AnuncioCreate(AnuncioBase):
+#     id: int = Field(default=None, primary_key=True)
+#     autor: int
+#
+# class AnuncioResponse(AnuncioBase):
+#     id: int = Field(default=None, primary_key=True)
+#     # criado_em: datetime
+#
+#     # class Config:
+#     #     orm_mode = True
 
-class AnuncioResponse(AnuncioBase):
-    id: int
-    criado_em: datetime
+class ChatBase(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    usuario_1_id: int = Field(foreign_key="usuariobase.id")
+    usuario_2_id: int = Field(foreign_key="usuariobase.id")
 
-    class Config:
-        orm_mode = True
+# class ChatRead(ChatBase):
+#     id: int
 
-class ChatBase(BaseModel):
-    usuario_1_id: int
-    usuario_2_id: int
-
-
-class ChatRead(ChatBase):
-    id: int
-    criado_em: datetime
-
-    class Config:
-        orm_mode = True
-
-
-class MensagemBase(BaseModel):
-    chat_id: int
-    remetente_id: int
+class MensagemBase(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    chat_id: int = Field(foreign_key="chatbase.id")
+    remetente_id: int = Field(foreign_key="usuariobase.id")
     conteudo: str
+    enviada_em: datetime
 
 
 class MensagemRead(MensagemBase):
-    id: int
+    id: int = Field(default=None, primary_key=True)
     enviada_em: datetime
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
-class AvaliacaoBase(BaseModel):
+class AvaliacaoBase(SQLModel, table=True):
+    id: Optional[int] = Field(
+        default=None,
+        primary_key=True,
+    )
     nota: int
     comentario: Optional[str]
+    criada_em: Optional[datetime]
     autor: int
     anuncio: int
 
-
-class AvaliacaoRead(BaseModel):
-    id: int
-    nota: int
-    comentario: Optional[str]
-    criada_em: datetime
-    autor: int
-    anuncio: int
-
-    class Config:
-        orm_mode = True
- 
+# class AvaliacaoRead(SQLModel, table=True):
+#     id: int = Field(default=None, primary_key=True)
+#     nota: int
+#     comentario: Optional[str]
+#     criada_em: datetime
+#     autor: int
+#     anuncio: int
+#
+#     # class Config:
+#     #     orm_mode = True
+#
+# class AvaliacaoCreate(SQLModel, table=True):
+#     id: int = Field(default=None, primary_key=True)
+#     #todo
+#     pass
 
 class LoginData(BaseModel):
-    email: str
+    email: EmailStr
     senha: str
 
-class LoginResponse(BaseModel):
-    mensagem: str
-    usuario: str
+# class LoginResponse(SQLModel, table=True):
+#     usuario: UsuarioBase
 
